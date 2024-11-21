@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use llvmlibc_build::cmake;
 use llvmlibc_build::config::Config;
@@ -28,8 +28,14 @@ fn main() {
 
     let startup_dir = root.join("build").join("startup").join("linux");
     let crt1 = startup_dir.join("crt1.o");
-    let crti = startup_dir.join("CMakeFiles").join("libc.startup.linux.crti.dir").join("crti.cpp.o");
-    let crtn = startup_dir.join("CMakeFiles").join("libc.startup.linux.crtn.dir").join("crtn.cpp.o");
+    let crti = startup_dir
+        .join("CMakeFiles")
+        .join("libc.startup.linux.crti.dir")
+        .join("crti.cpp.o");
+    let crtn = startup_dir
+        .join("CMakeFiles")
+        .join("libc.startup.linux.crtn.dir")
+        .join("crtn.cpp.o");
 
     let lib_path = root.join("build").join("lib");
     let startup_path = lib_path.join("libstartup.a");
@@ -47,4 +53,20 @@ fn main() {
     println!("cargo:rustc-link-lib=static=c");
     println!("cargo:rustc-link-lib=static=m");
     println!("cargo:rustc-link-lib=static=startup");
+    // avoid unwind linkage enforced by rustc
+    link_in_empty( "unwind", &lib_path);
+}
+
+fn link_in_empty(name: &str, lib_path: &Path, dir_path: &Path) {
+    let to = format!("{}/lib{}.a", lib_path.display(), name);
+    let asm_name = "src/empty.S";
+    cc::Build::new().file(&asm_name).compile(&to);
+    println!("cargo:rerun-if-changed={}", asm_name);
+    let prev_metadata = std::fs::metadata(&to);
+    std::fs::copy(&from, &to).unwrap();
+    assert!(
+        prev_metadata.is_ok(),
+        "{} didn't previously exist; please inspect the new file and `git add` it",
+        to
+    );
 }
