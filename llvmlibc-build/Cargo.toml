@@ -2,9 +2,6 @@
 name = "llvmlibc-build"
 version = "0.1.0"
 edition = "2021"
-build = "builder/main.rs"
 
 [dependencies]
-
-[build-dependencies]
 cmake = "0.1.51"

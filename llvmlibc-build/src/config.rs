@@ -1,10 +1,11 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
-pub trait AddToCMake {
+pub(crate) trait AddToCMake {
     fn add_to_cmake(&self, config: &mut cmake::Config);
 }
 
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub struct CodegenOpts {
     pub strong_stack_protector: bool,
     pub keep_frame_pointer: bool,
@@ -18,14 +19,6 @@ fn bool_to_str(b: bool) -> &'static str {
     }
 }
 
-impl Default for CodegenOpts {
-    fn default() -> Self {
-        CodegenOpts {
-            strong_stack_protector: false,
-            keep_frame_pointer: false,
-        }
-    }
-}
 
 impl AddToCMake for CodegenOpts {
     fn add_to_cmake(&self, config: &mut cmake::Config) {
@@ -41,7 +34,9 @@ impl AddToCMake for CodegenOpts {
 }
 
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub enum ErrnoMode {
+    #[default]
     Default,
     Undefined,
     ThreadLocal,
@@ -50,11 +45,6 @@ pub enum ErrnoMode {
     System,
 }
 
-impl Default for ErrnoMode {
-    fn default() -> Self {
-        ErrnoMode::Default
-    }
-}
 
 impl AddToCMake for ErrnoMode {
     fn add_to_cmake(&self, config: &mut cmake::Config) {
@@ -92,6 +82,7 @@ impl MathOptimization {
 }
 
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub struct MathOpts {
     frexp_inf_nan_exponent: Option<String>,
     optimizations: Vec<MathOptimization>,
@@ -113,16 +104,9 @@ impl AddToCMake for MathOpts {
     }
 }
 
-impl Default for MathOpts {
-    fn default() -> Self {
-        MathOpts {
-            frexp_inf_nan_exponent: None,
-            optimizations: vec![],
-        }
-    }
-}
 
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub struct PrintfOpts {
     pub disable_fixed_point: bool,
     pub disable_float: bool,
@@ -171,20 +155,6 @@ impl AddToCMake for PrintfOpts {
     }
 }
 
-impl Default for PrintfOpts {
-    fn default() -> Self {
-        PrintfOpts {
-            disable_fixed_point: false,
-            disable_float: false,
-            disable_index_mode: false,
-            disable_strerror: false,
-            disable_write_int: false,
-            float_to_str_no_specialize_ld: false,
-            float_to_str_use_dyadic_float: false,
-            float_to_str_use_mega_long_double_table: false,
-        }
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct PThreadOpts {
@@ -237,6 +207,7 @@ impl AddToCMake for QSortImpl {
 }
 
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub struct ScanfOpts {
     pub disable_float: bool,
     pub disable_index_mode: bool,
@@ -255,16 +226,9 @@ impl AddToCMake for ScanfOpts {
     }
 }
 
-impl Default for ScanfOpts {
-    fn default() -> Self {
-        ScanfOpts {
-            disable_float: false,
-            disable_index_mode: false,
-        }
-    }
-}
 
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub struct SetjmpOpts {
     pub aarch64_restore_platform_register: bool,
 }
@@ -278,15 +242,9 @@ impl AddToCMake for SetjmpOpts {
     }
 }
 
-impl Default for SetjmpOpts {
-    fn default() -> Self {
-        SetjmpOpts {
-            aarch64_restore_platform_register: false,
-        }
-    }
-}
 
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub struct StringOpts {
     pub memset_x86_use_software_prefetch: bool,
     pub unsafe_wide_read: bool,
@@ -305,16 +263,9 @@ impl AddToCMake for StringOpts {
     }
 }
 
-impl Default for StringOpts {
-    fn default() -> Self {
-        StringOpts {
-            memset_x86_use_software_prefetch: false,
-            unsafe_wide_read: false,
-        }
-    }
-}
 
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub struct TimeOpts {
     pub force_64bit: bool,
 }
@@ -325,14 +276,10 @@ impl AddToCMake for TimeOpts {
     }
 }
 
-impl Default for TimeOpts {
-    fn default() -> Self {
-        TimeOpts { force_64bit: false }
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct Config {
+    pub path: PathBuf,
     pub full_build: bool,
     pub with_scudo: Option<PathBuf>,
     pub codegen_opts: CodegenOpts,
@@ -349,8 +296,12 @@ pub struct Config {
 }
 
 impl Config {
-    fn new_default() -> Self {
+    pub fn new_default<P>(path: P) -> Self
+    where
+        P: AsRef<Path>,
+    {
         Config {
+            path: path.as_ref().to_owned(),
             full_build: true,
             with_scudo: None,
             codegen_opts: Default::default(),
@@ -364,6 +315,16 @@ impl Config {
             setjmp_opts: Default::default(),
             string_opts: Default::default(),
             time_opts: Default::default(),
+        }
+    }
+    pub fn new_with_scudo<P0, P1>(path: P0, with_scudo: P1) -> Self
+    where
+        P0: AsRef<Path>,
+        P1: AsRef<Path>,
+    {
+        Config {
+            with_scudo: Some(with_scudo.as_ref().to_owned()),
+            ..Self::new_default(path)
         }
     }
 }
