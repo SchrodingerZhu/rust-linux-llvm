@@ -315,6 +315,12 @@ impl Config {
 
 impl AddToCMake for Config {
     fn add_to_cmake(&self, config: &mut cmake::Config) {
+        config.define("COMPILER_RT_BUILD_SANITIZERS", "ON");
+        config.define("COMPILER_RT_SANITIZERS_TO_BUILD", "scudo_standalone");
+        config.define("COMPILER_RT_DEFAULT_TARGET_ONLY", "ON");
+        let arch = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap();
+        config.target(&format!("{}-unknown-linux-gnu", arch));
+        config.define("CMAKE_C_COMPILER_TARGET", "x86_64-unknown-linux-gnu");
         config.define("LLVM_COMPILER_IS_GCC_COMPATIBLE", "ON");
         config.define("LLVM_RUNTIMES_BUILD", "ON");
         config.define("LIBC_USE_NEW_HEADER_GEN", "On");
