@@ -4,8 +4,7 @@ pub(crate) trait AddToCMake {
     fn add_to_cmake(&self, config: &mut cmake::Config);
 }
 
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct CodegenOpts {
     pub strong_stack_protector: bool,
     pub keep_frame_pointer: bool,
@@ -18,7 +17,6 @@ fn bool_to_str(b: bool) -> &'static str {
         "false"
     }
 }
-
 
 impl AddToCMake for CodegenOpts {
     fn add_to_cmake(&self, config: &mut cmake::Config) {
@@ -33,8 +31,7 @@ impl AddToCMake for CodegenOpts {
     }
 }
 
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub enum ErrnoMode {
     #[default]
     Default,
@@ -44,7 +41,6 @@ pub enum ErrnoMode {
     External,
     System,
 }
-
 
 impl AddToCMake for ErrnoMode {
     fn add_to_cmake(&self, config: &mut cmake::Config) {
@@ -81,8 +77,7 @@ impl MathOptimization {
     }
 }
 
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct MathOpts {
     frexp_inf_nan_exponent: Option<String>,
     optimizations: Vec<MathOptimization>,
@@ -104,9 +99,7 @@ impl AddToCMake for MathOpts {
     }
 }
 
-
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct PrintfOpts {
     pub disable_fixed_point: bool,
     pub disable_float: bool,
@@ -155,7 +148,6 @@ impl AddToCMake for PrintfOpts {
     }
 }
 
-
 #[derive(Debug, Clone)]
 pub struct PThreadOpts {
     pub raw_mutex_default_spin_count: usize,
@@ -176,15 +168,15 @@ impl Default for PThreadOpts {
 impl AddToCMake for PThreadOpts {
     fn add_to_cmake(&self, config: &mut cmake::Config) {
         config.define(
-            "LIBC_CONF_PTHREAD_RAW_MUTEX_DEFAULT_SPIN_COUNT",
+            "LIBC_CONF_RAW_MUTEX_DEFAULT_SPIN_COUNT",
             self.raw_mutex_default_spin_count.to_string(),
         );
         config.define(
-            "LIBC_CONF_PTHREAD_RWLOCK_DEFAULT_SPIN_COUNT",
+            "LIBC_CONF_RWLOCK_DEFAULT_SPIN_COUNT",
             self.rwlock_default_spin_count.to_string(),
         );
         config.define(
-            "LIBC_CONF_PTHREAD_TIMEOUT_ENSURE_MONOTONICITY",
+            "LIBC_CONF_TIMEOUT_ENSURE_MONOTONICITY",
             bool_to_str(self.timeout_ensure_monotonicity),
         );
     }
@@ -206,8 +198,7 @@ impl AddToCMake for QSortImpl {
     }
 }
 
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct ScanfOpts {
     pub disable_float: bool,
     pub disable_index_mode: bool,
@@ -226,9 +217,7 @@ impl AddToCMake for ScanfOpts {
     }
 }
 
-
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct SetjmpOpts {
     pub aarch64_restore_platform_register: bool,
 }
@@ -242,9 +231,7 @@ impl AddToCMake for SetjmpOpts {
     }
 }
 
-
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct StringOpts {
     pub memset_x86_use_software_prefetch: bool,
     pub unsafe_wide_read: bool,
@@ -263,9 +250,7 @@ impl AddToCMake for StringOpts {
     }
 }
 
-
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct TimeOpts {
     pub force_64bit: bool,
 }
@@ -275,7 +260,6 @@ impl AddToCMake for TimeOpts {
         config.define("LIBC_CONF_TIME_64BIT", bool_to_str(self.force_64bit));
     }
 }
-
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -333,6 +317,7 @@ impl AddToCMake for Config {
     fn add_to_cmake(&self, config: &mut cmake::Config) {
         config.define("LLVM_COMPILER_IS_GCC_COMPATIBLE", "ON");
         config.define("LLVM_RUNTIMES_BUILD", "ON");
+        config.define("LIBC_USE_NEW_HEADER_GEN", "On");
         config.define("LLVM_LIBC_FULL_BUILD", bool_to_str(self.full_build));
         if let Some(with_scudo) = &self.with_scudo {
             config.define("LLVM_LIBC_COMPILER_RT_PATH", with_scudo);
