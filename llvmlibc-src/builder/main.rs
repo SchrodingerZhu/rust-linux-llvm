@@ -1,5 +1,0 @@
-mod config;
-fn main() {
-    
-
-}
